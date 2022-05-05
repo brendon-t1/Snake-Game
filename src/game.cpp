@@ -96,8 +96,8 @@ void Game::Update() {
   // Check if there's food over here
   if (food.x == new_x && food.y == new_y) {
     score++;
-      std::thread t1{ PlaceFood() };//using threads here to place two foods
-      std::thread t2{ PlaceFood() };
+      std::thread t1{ &Game::PlaceFood, this };//using threads here to place two foods
+      std::thread t2{ &Game::PlaceFood, this };
       t1.join();
       t2.join();
     // Grow snake and increase speed.
