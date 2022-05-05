@@ -51,6 +51,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
 }
 
 void Game::PlaceFood() {
+  std:lock_guard<std::mutex> uLock(mtx);//locking mutex to allow only one thread at a time
   int x, y;
   while (true) {
     x = random_w(engine);
@@ -65,6 +66,24 @@ void Game::PlaceFood() {
   }
 }
 
+void Game::PlaceObstacle() {//new function to place obstacles
+
+  //if snake body is say 10 then start to place obstacle and place another each tim
+  //the snake body grows.
+  // int x, y;
+  // while (true) {
+  //   x = random_w(engine);
+  //   y = random_h(engine);
+  //   // Check that the location is not occupied by a snake item before placing
+  //   // food.
+  //   if (!snake.SnakeCell(x, y)) {
+  //     food.x = x;
+  //     food.y = y;
+  //     return;
+  //   }
+  // }
+}
+
 void Game::Update() {
   if (!snake.alive) return;
 
@@ -76,7 +95,10 @@ void Game::Update() {
   // Check if there's food over here
   if (food.x == new_x && food.y == new_y) {
     score++;
-    PlaceFood();
+      std::thread t1{ PlaceFood() };//using threads here to place two foods
+      std::thread t1{ PlaceFood() };
+      t1.join();
+      t2.join();
     // Grow snake and increase speed.
     snake.GrowBody();
     snake.speed += 0.02;

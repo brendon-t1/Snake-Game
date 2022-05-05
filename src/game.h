@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include <random>
+#include <mutex>
 #include "SDL.h"
 #include "controller.h"
 #include "renderer.h"
@@ -18,6 +19,9 @@ class Game {
  private:
   Snake snake;
   SDL_Point food;
+  SDL_Point obstacle;//new added class data member
+
+  std::mutex mtx;
 
   std::random_device dev;
   std::mt19937 engine;
@@ -27,6 +31,7 @@ class Game {
   int score{0};
 
   void PlaceFood();
+  void PlaceObstacle();//new function to place obstacle in the game
   void Update();
 };
 
