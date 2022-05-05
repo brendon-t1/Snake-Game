@@ -1,4 +1,5 @@
 #include "game.h"
+#include <thread>
 #include <iostream>
 #include "SDL.h"
 
@@ -51,7 +52,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
 }
 
 void Game::PlaceFood() {
-  std:lock_guard<std::mutex> uLock(mtx);//locking mutex to allow only one thread at a time
+  std::lock_guard<std::mutex> uLock(mtx);//locking mutex to allow only one thread at a time
   int x, y;
   while (true) {
     x = random_w(engine);
@@ -96,7 +97,7 @@ void Game::Update() {
   if (food.x == new_x && food.y == new_y) {
     score++;
       std::thread t1{ PlaceFood() };//using threads here to place two foods
-      std::thread t1{ PlaceFood() };
+      std::thread t2{ PlaceFood() };
       t1.join();
       t2.join();
     // Grow snake and increase speed.
