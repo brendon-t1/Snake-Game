@@ -51,7 +51,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
   }
 }
 
-void Game::PlaceFood() {
+void Game::PlaceFood() {//ORIGINAL
   std::lock_guard<std::mutex> uLock(mtx);//locking mutex to allow only one thread at a time
   int x, y;
   while (true) {
@@ -60,29 +60,30 @@ void Game::PlaceFood() {
     // Check that the location is not occupied by a snake item before placing
     // food.
     if (!snake.SnakeCell(x, y)) {
-      food.x = x;
+      food.x = x;//food is now a unique pointer
       food.y = y;
+      _condition.notify_one();
       return;
     }
   }
 }
 
-void Game::PlaceObstacle() {//new function to place obstacles
-
-  //if snake body is say 10 then start to place obstacle and place another each tim
-  //the snake body grows.
-  // int x, y;
-  // while (true) {
-  //   x = random_w(engine);
-  //   y = random_h(engine);
-  //   // Check that the location is not occupied by a snake item before placing
-  //   // food.
-  //   if (!snake.SnakeCell(x, y)) {
-  //     food.x = x;
-  //     food.y = y;
-  //     return;
-  //   }
-  // }
+void Game::PlaceFood2() {//take in food one data points as pointers
+  std::unique_lock<std::mutex> uLock(mtx);//locking mutex to allow only one thread at a time
+  //condition variable here to start
+  _condition.wait(uLock, [] { return (food != null) ? true : false; });//make sure food is set
+  int x, y;
+  while (true) {
+    x = random_w(engine);//make sure that these are different values
+    y = random_h(engine);
+    // Check that the location is not occupied by a snake item before placing
+    // food.
+    if (!snake.SnakeCell(x, y) && !food(x, y)) {//if the cell is not occupied by the first food
+      food2.x = x;
+      food2.y = y;
+      return;
+    }
+  }
 }
 
 void Game::Update() {
@@ -93,11 +94,11 @@ void Game::Update() {
   int new_x = static_cast<int>(snake.head_x);
   int new_y = static_cast<int>(snake.head_y);
 
-  // Check if there's food over here
-  if (food.x == new_x && food.y == new_y) {
+  // Check if there's food over here, either food or food 2
+  if (food.x == new_x && food.y == new_y || food2.x == new_x && food.y == new_y) {
     score++;
       std::thread t1{ &Game::PlaceFood, this };//using threads here to place two foods
-      std::thread t2{ &Game::PlaceFood, this };
+      std::thread t2{ &Game::PlaceFood2, this };
       t1.join();
       t2.join();
     // Grow snake and increase speed.

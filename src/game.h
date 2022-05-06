@@ -19,9 +19,10 @@ class Game {
  private:
   Snake snake;
   SDL_Point food;
-  SDL_Point obstacle;//new added class data member
+  SDL_Point food2;
 
   std::mutex mtx;
+  std::condition_variable _condition;
 
   std::random_device dev;
   std::mt19937 engine;
@@ -31,7 +32,7 @@ class Game {
   int score{0};
 
   void PlaceFood();
-  void PlaceObstacle();//new function to place obstacle in the game
+  void PlaceFood2();//new function to place food 2
   void Update();
 };
 
