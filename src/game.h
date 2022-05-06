@@ -3,10 +3,12 @@
 
 #include <random>
 #include <mutex>
+#include <condition_variable>
 #include "SDL.h"
 #include "controller.h"
 #include "renderer.h"
 #include "snake.h"
+//#include "main.cpp"
 
 class Game {
  public:
@@ -34,6 +36,7 @@ class Game {
   void PlaceFood();
   void PlaceFood2();//new function to place food 2
   void Update();
+  bool FoodCell(int x, int y);
 };
 
 #endif

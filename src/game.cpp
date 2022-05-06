@@ -26,7 +26,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
     // Input, Update, Render - the main game loop.
     controller.HandleInput(running, snake);
     Update();
-    renderer.Render(snake, food);
+    renderer.Render(snake, food, food2);
 
     frame_end = SDL_GetTicks();
 
@@ -71,14 +71,14 @@ void Game::PlaceFood() {//ORIGINAL
 void Game::PlaceFood2() {//take in food one data points as pointers
   std::unique_lock<std::mutex> uLock(mtx);//locking mutex to allow only one thread at a time
   //condition variable here to start
-  _condition.wait(uLock, [] { return (food != null) ? true : false; });//make sure food is set
+  _condition.wait(uLock, [this] (){ return (food.x == -1 && food.y == -1) ? true : false; });//make sure food is set
   int x, y;
   while (true) {
     x = random_w(engine);//make sure that these are different values
     y = random_h(engine);
     // Check that the location is not occupied by a snake item before placing
     // food.
-    if (!snake.SnakeCell(x, y) && !food(x, y)) {//if the cell is not occupied by the first food
+    if (!snake.SnakeCell(x, y) && !FoodCell(x, y)) {//if the cell is not occupied by the first food
       food2.x = x;
       food2.y = y;
       return;
@@ -97,6 +97,10 @@ void Game::Update() {
   // Check if there's food over here, either food or food 2
   if (food.x == new_x && food.y == new_y || food2.x == new_x && food.y == new_y) {
     score++;
+      food.x = -1;
+      food.y = -1;
+      food2.x = -1;
+      food2.y = -1;
       std::thread t1{ &Game::PlaceFood, this };//using threads here to place two foods
       std::thread t2{ &Game::PlaceFood2, this };
       t1.join();
@@ -105,6 +109,18 @@ void Game::Update() {
     snake.GrowBody();
     snake.speed += 0.02;
   }
+}
+
+bool Game::FoodCell(int x, int y) {
+  if (x == static_cast<int>(food.x) && y == static_cast<int>(food.y)) {
+    return true;
+  }
+//   for (auto const &item : body) {
+//     if (x == item.x && y == item.y) {
+//       return true;
+//     }
+//   }
+  return false;
 }
 
 int Game::GetScore() const { return score; }
