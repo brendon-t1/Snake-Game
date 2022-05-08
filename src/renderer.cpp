@@ -48,13 +48,13 @@ void Renderer::Render(Snake const snake, SDL_Point const &food, SDL_Point const 
   SDL_RenderClear(sdl_renderer);
 
   // Render food
-  SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0xCC, 0x00, 0xFF);
+  SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0x00, 0x00, 0xFF);
   block.x = food.x * block.w;
   block.y = food.y * block.h;
   SDL_RenderFillRect(sdl_renderer, &block);
-
-  // Render food2
-  SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0xCC, 0x00, 0xFF);
+  
+    // Render food2
+  SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0xCC, 0x00, 0xFF);//changed 0x00 to 0xCC
   block.x = food2.x * block.w;
   block.y = food2.y * block.h;
   SDL_RenderFillRect(sdl_renderer, &block);

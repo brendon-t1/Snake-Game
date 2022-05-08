@@ -2,13 +2,13 @@
 #define GAME_H
 
 #include <random>
-#include <mutex>
+#include <mutex>//including mutex, condition_variable, thread
 #include <condition_variable>
+#include <thread>
 #include "SDL.h"
 #include "controller.h"
 #include "renderer.h"
 #include "snake.h"
-//#include "main.cpp"
 
 class Game {
  public:
@@ -17,14 +17,17 @@ class Game {
            std::size_t target_frame_duration);
   int GetScore() const;
   int GetSize() const;
+  
+  void PlaceFood();
+  void PlaceFood2();//new function to place food 2
 
  private:
   Snake snake;
   SDL_Point food;
-  SDL_Point food2;
-
-  std::mutex mtx;
-  std::condition_variable _condition;
+  SDL_Point food2;//new SDL_Point food2
+  
+  std::mutex mtx;//added
+  std::condition_variable _condition;//added
 
   std::random_device dev;
   std::mt19937 engine;
@@ -33,10 +36,8 @@ class Game {
 
   int score{0};
 
-  void PlaceFood();
-  void PlaceFood2();//new function to place food 2
   void Update();
-  bool FoodCell(int x, int y);
+  bool FoodCell(int x, int y);//check x and y of the first food
 };
 
 #endif

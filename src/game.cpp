@@ -1,5 +1,4 @@
 #include "game.h"
-#include <thread>
 #include <iostream>
 #include "SDL.h"
 
@@ -23,62 +22,57 @@ void Game::Run(Controller const &controller, Renderer &renderer,
   while (running) {
     frame_start = SDL_GetTicks();
 
-    // Input, Update, Render - the main game loop.
     controller.HandleInput(running, snake);
     Update();
-    renderer.Render(snake, food, food2);
+    renderer.Render(snake, food, food2);//pass food2 to Render
 
     frame_end = SDL_GetTicks();
 
-    // Keep track of how long each loop through the input/update/render cycle
-    // takes.
     frame_count++;
     frame_duration = frame_end - frame_start;
 
-    // After every second, update the window title.
     if (frame_end - title_timestamp >= 1000) {
       renderer.UpdateWindowTitle(score, frame_count);
       frame_count = 0;
       title_timestamp = frame_end;
     }
 
-    // If the time for this frame is too small (i.e. frame_duration is
-    // smaller than the target ms_per_frame), delay the loop to
-    // achieve the correct frame rate.
     if (frame_duration < target_frame_duration) {
       SDL_Delay(target_frame_duration - frame_duration);
     }
   }
 }
 
-void Game::PlaceFood() {//ORIGINAL
-  std::lock_guard<std::mutex> uLock(mtx);//locking mutex to allow only one thread at a time
+void Game::PlaceFood() {
+  //using lock_guard to lock the thread
+  std::lock_guard<std::mutex> uLock(mtx);
   int x, y;
   while (true) {
     x = random_w(engine);
     y = random_h(engine);
-    // Check that the location is not occupied by a snake item before placing
-    // food.
+  
     if (!snake.SnakeCell(x, y)) {
-      food.x = x;//food is now a unique pointer
+      food.x = x;
       food.y = y;
-      _condition.notify_one();
+      _condition.notify_one();//notify other thread
       return;
     }
   }
 }
 
-void Game::PlaceFood2() {//take in food one data points as pointers
-  std::unique_lock<std::mutex> uLock(mtx);//locking mutex to allow only one thread at a time
+void Game::PlaceFood2() {
+  //lock using a unique_lock
+  std::unique_lock<std::mutex> uLock(mtx);
   //condition variable here to start
-  _condition.wait(uLock, [this] (){ return (food.x == -1 && food.y == -1) ? true : false; });//make sure food is set
+  _condition.wait(uLock, [this] (){ return (food.x != -1 && food.y != -1) ? true : false; });//make sure first food is set
+
   int x, y;
   while (true) {
-    x = random_w(engine);//make sure that these are different values
+    x = random_w(engine);
     y = random_h(engine);
-    // Check that the location is not occupied by a snake item before placing
-    // food.
-    if (!snake.SnakeCell(x, y) && !FoodCell(x, y)) {//if the cell is not occupied by the first food
+//     Check that the location is not occupied by a snake item or the first
+    //food item before placing the second food
+    if (!snake.SnakeCell(x, y) && !FoodCell(x, y)) {
       food2.x = x;
       food2.y = y;
       return;
@@ -94,32 +88,28 @@ void Game::Update() {
   int new_x = static_cast<int>(snake.head_x);
   int new_y = static_cast<int>(snake.head_y);
 
-  // Check if there's food over here, either food or food 2
-  if (food.x == new_x && food.y == new_y || food2.x == new_x && food.y == new_y) {
+  // Check if food or food2 is present where the snake head is
+  if (food.x == new_x && food.y == new_y || food2.x == new_x && food2.y == new_y) {
     score++;
       food.x = -1;
       food.y = -1;
       food2.x = -1;
       food2.y = -1;
-      std::thread t1{ &Game::PlaceFood, this };//using threads here to place two foods
-      std::thread t2{ &Game::PlaceFood2, this };
-      t1.join();
-      t2.join();
+    //Call functions PlaceFood and PlaceFood2 using threads
+    std::thread t1(&Game::PlaceFood, this);
+    std::thread t2(&Game::PlaceFood2, this);
+    //join the threads back to the main function
+    t1.join();
+    t2.join();
     // Grow snake and increase speed.
     snake.GrowBody();
     snake.speed += 0.02;
   }
 }
-
 bool Game::FoodCell(int x, int y) {
   if (x == static_cast<int>(food.x) && y == static_cast<int>(food.y)) {
     return true;
   }
-//   for (auto const &item : body) {
-//     if (x == item.x && y == item.y) {
-//       return true;
-//     }
-//   }
   return false;
 }
 
